@@ -3,7 +3,8 @@
 @prefix : <http://ontologi.es/doap-deps#>.
 
 `Sub-HandlesVia-XS`
-	:runtime-requirement    [ :on "perl 5.010001"^^:CpanId ];
+	:runtime-requirement    [ :on "perl 5.008008"^^:CpanId ];
+	:runtime-requirement    [ :on "Types::Common 2.010001"^^:CpanId ];
 	:test-requirement       [ :on "Test2::V0"^^:CpanId ];
 	:test-requirement       [ :on "Test2::Tools::Spec"^^:CpanId ];
 	:test-requirement       [ :on "Test2::Require::AuthorTesting"^^:CpanId ];
