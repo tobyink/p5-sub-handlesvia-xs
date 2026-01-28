@@ -9,6 +9,13 @@
 
 #define WRONG_NUMBER_OF_PARAMETERS "Wrong number of parameters"
 
+#define SV_SAFE_COPY(val)                                 \
+    (                                                     \
+        (SvROK(val) && SvTYPE(SvRV(val)) == SVt_PVCV)     \
+            ? newRV_inc(SvRV(val))                        \
+            : newSVsv(val)                                \
+    )
+
 // Utility macros, typedefs, etc.
 #include "src/Types.c"
 #include "src/ShouldReturn.c"
@@ -139,7 +146,7 @@ CODE:
         if (has_curried_sv) expected--;
         if ( items != expected ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
-        val = curried_sv;
+        val = SV_SAFE_COPY(curried_sv);
 
         bool ok;
         CHECK_TYPE(ok, val, sig->element_type, sig->element_type_cv);
@@ -676,10 +683,10 @@ CODE:
     bool ok;
     for (I32 i = 1; i < items; i++) {
         val = ST(i);
-        CHECK_TYPE(ok, val, sig->element_type, sig->element_type_cv);
+        CHECK_TYPE(ok, newSVsv(val), sig->element_type, sig->element_type_cv);
         TRY_COERCE_TYPE(ok, val, sig->element_type, sig->element_type_cv, sig->element_coercion_cv);
         if (!ok) type_error(val, "$_", i, sig->element_type, sig->element_type_tiny);
-        av_push(array, newSVsv(val));
+        av_push(array, SV_SAFE_COPY(val));
     }
 
     RETURN_ARRAY_EXPECTATION;
@@ -736,7 +743,7 @@ CODE:
     if (real_ix < 0)
         real_ix += len;
 
-    val = curried_sv;
+    val = SV_SAFE_COPY(curried_sv);
 
     bool ok;
     CHECK_TYPE(ok, val, sig->element_type, sig->element_type_cv);
@@ -856,11 +863,11 @@ CODE:
     bool ok;
     for (I32 i = items - 1; i >= 1; i--) {
         val = ST(i);
-        CHECK_TYPE(ok, val, sig->element_type, sig->element_type_cv);
+        CHECK_TYPE(ok, newSVsv(val), sig->element_type, sig->element_type_cv);
         TRY_COERCE_TYPE(ok, val, sig->element_type, sig->element_type_cv, sig->element_coercion_cv);
         if (!ok) type_error(val, "$_", i, sig->element_type, sig->element_type_tiny);
         av_unshift(array, 1);
-        av_store(array, 0, newSVsv(val));
+        av_store(array, 0, SV_SAFE_COPY(val));
     }
 
     RETURN_ARRAY_EXPECTATION;

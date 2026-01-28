@@ -63,7 +63,7 @@
     STMT_START {                                                   \
         SV **svp = hv_fetch(hv, #field, sizeof(#field) - 1, 0);    \
         if (svp && SvOK(*svp)) {                                   \
-            out->field = newSVsv(*svp);                            \
+            out->field = SV_SAFE_COPY(*svp);                       \
             out->predfield = TRUE;                                 \
         }                                                          \
         else {                                                     \
