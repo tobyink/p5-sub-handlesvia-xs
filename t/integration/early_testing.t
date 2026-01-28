@@ -42,14 +42,14 @@ subtest "Including type check" => sub {
 	my $e = dies {
 		Local::test_2( $arr, "Hello world" );
 	};
-	like $e, qr/^Invalid value/;
+	like $e, qr/did not pass type constraint/;
 
 	is( $arr, [ 1..5 ] );
 
 	my $e2 = dies {
 		Local::test_2( $arr, 6, 7, undef, 9 );
 	};
-	like $e2, qr/^Invalid value/;
+	like $e2, qr/did not pass type constraint/;
 
 	is( $arr, [ 1..7 ] );
 };
@@ -107,7 +107,7 @@ subtest "Hashref invocant" => sub {
 	my $e = dies {
 		Local::test_3( $arr, "Hello world" );
 	};
-	like $e, qr/^Invalid value/;
+	like $e, qr/did not pass type constraint/;
 
 	Local::test_4( $arr, -3, -2, -1, 0 );
 	is( $arr, { arr => [ -3, -2, -1, 0, 1..5 ] } );

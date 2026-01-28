@@ -442,3 +442,124 @@ check_type(SV* const val, int flags, CV* check_cv)
             FREETMPS; LEAVE;                                      \
         }                                                         \
     } STMT_END
+
+const char *
+type_name(I32 type_flags)
+{
+    static char buf[64];
+
+    /* Extract container flags */
+    bool is_array = (type_flags & TYPE_ARRAYREF) != 0;
+    bool is_hash  = (type_flags & TYPE_HASHREF)  != 0;
+
+    /* Not supported */
+    if (is_array && is_hash) {
+        return "Unknown";
+    }
+
+    /* Extract base type (low 4 bits) */
+    I32 base = type_flags & 0x0F;
+
+    const char *base_name;
+
+    switch (base) {
+        case TYPE_BASE_ANY:        base_name = "Any";                  break;
+        case TYPE_BASE_DEFINED:    base_name = "Defined";              break;
+        case TYPE_BASE_REF:        base_name = "Ref";                  break;
+        case TYPE_BASE_BOOL:       base_name = "Bool";                 break;
+        case TYPE_BASE_INT:        base_name = "Int";                  break;
+        case TYPE_BASE_PZINT:      base_name = "PositiveOrZeroInt";    break;
+        case TYPE_BASE_NUM:        base_name = "Num";                  break;
+        case TYPE_BASE_PZNUM:      base_name = "PositiveOrZeroNum";    break;
+        case TYPE_BASE_STR:        base_name = "Str";                  break;
+        case TYPE_BASE_NESTR:      base_name = "NonEmptyStr";          break;
+        case TYPE_BASE_CLASSNAME:  base_name = "ClassName";            break;
+        case TYPE_BASE_OBJECT:     base_name = "Object";               break;
+        case TYPE_BASE_SCALARREF:  base_name = "ScalarRef";            break;
+        case TYPE_BASE_CODEREF:    base_name = "CodeRef";              break;
+        case TYPE_OTHER:           base_name = "Unknown";              break;
+        default:                   base_name = "Unknown";              break;
+    }
+
+    if (is_array) {
+        snprintf(buf, sizeof(buf),
+                 "ArrayRef[%s]", base_name);
+        return buf;
+    }
+
+    if (is_hash) {
+        snprintf(buf, sizeof(buf),
+                 "HashRef[%s]", base_name);
+        return buf;
+    }
+
+    return base_name;
+}
+
+void
+type_error(SV *val, char *varname, I32 ix,
+           I32 element_type, SV *element_type_tiny)
+{
+    dTHX;
+    dSP;
+
+    /* Normalize val */
+    if (!val)
+        val = &PL_sv_undef;
+
+    /* Build full_varname */
+    SV *full_varname;
+
+    if (varname) {
+        if (ix < 0) {
+            full_varname = newSVpv(varname, 0);
+        }
+        else {
+            full_varname = newSVpvf("%s[%" IVdf "]", varname, (IV)ix);
+        }
+    }
+    else {
+        full_varname = newSVpvs("$_");
+    }
+
+    ENTER;
+    SAVETMPS;
+
+    PUSHMARK(SP);
+
+    if (element_type_tiny && SvROK(element_type_tiny) && SvOBJECT(SvRV(element_type_tiny)))
+    {
+        /* invocant: blessed Type::Tiny object */
+        XPUSHs(element_type_tiny);
+        /* undef as type name because _failed_check can extract from invocant */
+        XPUSHs(&PL_sv_undef);
+        /* failing value */
+        XPUSHs(sv_2mortal(newSVsv(val)));
+        /* varname => $full_varname */
+        XPUSHs(sv_2mortal(newSVpvs("varname")));
+        XPUSHs(sv_2mortal(full_varname));
+        PUTBACK;
+
+        call_method("_failed_check", G_VOID | G_DISCARD);
+    }
+    else {
+        /* invocant: undef */
+        XPUSHs(&PL_sv_undef);
+        /* type name */
+        SV *type_name_sv = sv_2mortal(newSVpv(type_name(element_type), 0));
+        XPUSHs(type_name_sv);
+        /* failing value */
+        XPUSHs(sv_2mortal(newSVsv(val)));
+        /* varname => $full_varname */
+        XPUSHs(sv_2mortal(newSVpvs("varname")));
+        XPUSHs(sv_2mortal(full_varname));
+        PUTBACK;
+
+        call_pv("Type::Tiny::_failed_check", G_VOID | G_DISCARD);
+    }
+
+    /* Never returns normally */
+    FREETMPS;
+    LEAVE;
+}
+

@@ -33,7 +33,7 @@ my $BASIC_TESTS = sub {
 	my $e = dies {
 		$f->($arr);
 	};
-	like $e, qr/^Argument 2 must be an index/;
+	like $e, qr/^Wrong number of parameters/, 'Type fail';
 
 	$f->($arr,  0, 66);
 	$f->($arr, -1, 99);
@@ -95,7 +95,7 @@ subtest 'Accessor operating directly on array, no curried arguments, type check,
 	my $e = dies {
 		Local::test_4($arr, 0, 31.1);
 	};
-	like $e, qr/^Invalid value/, 'Type fail';
+	like $e, qr/^Value "31.1" did not pass type constraint "Int" \(in ._.2.\)/, 'Type fail';
 };
 
 subtest 'Accessor operating directly on array, no curried arguments, type check and coercion' => sub {
@@ -120,7 +120,7 @@ subtest 'Accessor operating directly on array, no curried arguments, type check 
 	my $e = dies {
 		Local::test_4($arr, 0, 'Hello world');
 	};
-	like $e, qr/^Invalid value/, 'Type fail';
+	like $e, qr/^Value "Hello world" did not pass type constraint "Int" \(in ._.2.\)/, 'Type fail';
 };
 
 subtest 'Accessor operating on array in an array, no curried arguments' => sub {

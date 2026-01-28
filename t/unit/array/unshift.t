@@ -16,15 +16,15 @@ subtest "Basic" => sub {
 	} );
 
 	my $arr = [ 999 ];
-	is( Local::test_1( $arr, 1 ), undef );
+	is( Local::test_1( $arr, 1 ), 2 );
 	is( $arr, [ 1, 999 ] );
-	is( Local::test_1( $arr, undef ), undef );
+	is( Local::test_1( $arr, undef ), 3 );
 	is( $arr, [ undef, 1, 999 ] );
-	is( Local::test_1( $arr, 2, 3, 4 ), undef );
+	is( Local::test_1( $arr, 2, 3, 4 ), 6 );
 	is( $arr, [ 2, 3, 4, undef, 1, 999 ] );
-	is( Local::test_1( $arr ), undef );
+	is( Local::test_1( $arr ), 6 );
 	is( $arr, [ 2, 3, 4, undef, 1, 999 ] );
-	is( Local::test_1( $arr, 5 ), undef );
+	is( Local::test_1( $arr, 5 ), 7 );
 	is( $arr, [ 5, 2, 3, 4, undef, 1, 999 ] );
 };
 

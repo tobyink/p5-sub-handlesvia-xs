@@ -7,9 +7,11 @@
 #define IsCodeRef(sv)   (SvROK(sv) && !SvOBJECT(SvRV(sv)) && SvTYPE(SvRV(sv)) == SVt_PVCV)
 #define IsScalarRef(sv) (SvROK(sv) && !SvOBJECT(SvRV(sv)) && SvTYPE(SvRV(sv)) <= SVt_PVMG)
 
+#define WRONG_NUMBER_OF_PARAMETERS "Wrong number of parameters"
+
 // Utility macros, typedefs, etc.
-#include "src/ShouldReturn.c"
 #include "src/Types.c"
+#include "src/ShouldReturn.c"
 #include "src/Unpacking.c"
 
 // Different types, corresponding to Sub::HandlesVia
@@ -104,6 +106,7 @@ BOOT:
     INSTALL_CONST(stash, SHOULD_RETURN_OUT);
     INSTALL_CONST(stash, SHOULD_RETURN_OUTBLESS);
     INSTALL_CONST(stash, SHOULD_RETURN_VAL);
+    INSTALL_CONST(stash, SHOULD_RETURN_COUNT);
 }
 
 #### array : accessor
@@ -128,17 +131,41 @@ CODE:
     //Perl_sv_dump(sig->curried_sv);
 
     if ( items > ( has_ix ? 1 : 2 ) || sig->has_curried_sv ) {
+
         GET_CURRIED_SV_FROM_SOURCE(has_ix ? 1 : 2);
+
+        I32 expected = 3;
+        if (has_ix) expected--;
+        if (has_curried_sv) expected--;
+        if ( items != expected ) croak(WRONG_NUMBER_OF_PARAMETERS);
+
         val = curried_sv;
 
         bool ok;
         CHECK_TYPE(ok, val, sig->element_type, sig->element_type_cv);
         TRY_COERCE_TYPE(ok, val, sig->element_type, sig->element_type_cv, sig->element_coercion_cv);
-        if (!ok) croak("Invalid value");
+        if (!ok) {
+            if ( has_ix && has_curried_sv ) {
+                type_error(val, "$curried", 1, sig->element_type, sig->element_type_tiny);
+            }
+            else if ( has_curried_sv ) {
+                type_error(val, "$curried", 0, sig->element_type, sig->element_type_tiny);
+            }
+            else if ( has_ix ) {
+                type_error(val, "$_", 1, sig->element_type, sig->element_type_tiny);
+            }
+            else {
+                type_error(val, "$_", 2, sig->element_type, sig->element_type_tiny);
+            }
+        }
 
         av_store(array, real_ix, val);
     }
     else {
+        I32 expected = 2;
+        if (has_ix) expected--;
+        if ( items != expected ) croak(WRONG_NUMBER_OF_PARAMETERS);
+
         if (real_ix < 0 || real_ix >= len) {
             val = &PL_sv_undef;
         }
@@ -154,11 +181,13 @@ CODE:
 #### array : all
 
 void
-shvxs_array_all (SV *invocant)
+shvxs_array_all (SV *invocant, ...)
 CODE:
 {
     dTHX;
     dSP;
+
+    if ( items > 1 ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     UNPACK_SIG(shvxs_array_SIMPLE_SIG);
     GET_ARRAY_FROM_SOURCE;
@@ -179,7 +208,9 @@ CODE:
 
     UNPACK_SIG(shvxs_array_CALLBACK_SIG);
     GET_ARRAY_FROM_SOURCE;
+
     GET_CALLBACK_FROM_SOURCE(1);
+    if ( items != ( has_callback ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     val = &PL_sv_yes;
 
@@ -198,10 +229,16 @@ CODE:
         XPUSHs(sv_2mortal(newSViv(i)));
         PUTBACK;
 
-        call_sv((SV *)callback, G_SCALAR);
+        I32 count = call_sv((SV *)callback, G_SCALAR);
         SPAGAIN;
 
-        if (!SvTRUE(POPs)) {
+        SV *ret;
+        if (count > 0)
+            ret = POPs;
+        else
+            ret = &PL_sv_undef;
+
+        if (!SvTRUE(ret)) {
             PUTBACK;
             FREETMPS;
             LEAVE;
@@ -228,7 +265,9 @@ CODE:
 
     UNPACK_SIG(shvxs_array_CALLBACK_SIG);
     GET_ARRAY_FROM_SOURCE;
+
     GET_CALLBACK_FROM_SOURCE(1);
+    if ( items != ( has_callback ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     val = &PL_sv_no;
 
@@ -247,10 +286,16 @@ CODE:
         XPUSHs(sv_2mortal(newSViv(i)));
         PUTBACK;
 
-        call_sv((SV *)callback, G_SCALAR);
+        I32 count = call_sv((SV *)callback, G_SCALAR);
         SPAGAIN;
 
-        if (SvTRUE(POPs)) {
+        SV *ret;
+        if (count > 0)
+            ret = POPs;
+        else
+            ret = &PL_sv_undef;
+
+        if (SvTRUE(ret)) {
             PUTBACK;
             FREETMPS;
             LEAVE;
@@ -269,11 +314,13 @@ CODE:
 #### array : clear
 
 void
-shvxs_array_clear (SV *invocant)
+shvxs_array_clear (SV *invocant, ...)
 CODE:
 {
     dTHX;
     dSP;
+
+    if ( items > 1 ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     UNPACK_SIG(shvxs_array_SIMPLE_SIG);
     GET_ARRAY_FROM_SOURCE;
@@ -286,11 +333,13 @@ CODE:
 #### array : count
 
 void
-shvxs_array_count (SV *invocant)
+shvxs_array_count (SV *invocant, ...)
 CODE:
 {
     dTHX;
     dSP;
+
+    if ( items > 1 ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     UNPACK_SIG(shvxs_array_SIMPLE_SIG);
     GET_ARRAY_FROM_SOURCE;
@@ -312,7 +361,9 @@ CODE:
 
     UNPACK_SIG(shvxs_array_CALLBACK_SIG);
     GET_ARRAY_FROM_SOURCE;
+
     GET_CALLBACK_FROM_SOURCE(1);
+    if ( items != ( has_callback ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     val = &PL_sv_undef;
 
@@ -332,10 +383,16 @@ CODE:
         XPUSHs(sv_2mortal(newSViv(i)));
         PUTBACK;
 
-        call_sv((SV *)callback, G_SCALAR);
+        I32 count = call_sv((SV *)callback, G_SCALAR);
         SPAGAIN;
 
-        if (SvTRUE(POPs)) {
+        SV *ret;
+        if (count > 0)
+            ret = POPs;
+        else
+            ret = &PL_sv_undef;
+
+        if (SvTRUE(ret)) {
             PUTBACK;
             FREETMPS;
             LEAVE;
@@ -362,7 +419,9 @@ CODE:
 
     UNPACK_SIG(shvxs_array_CALLBACK_SIG);
     GET_ARRAY_FROM_SOURCE;
+
     GET_CALLBACK_FROM_SOURCE(1);
+    if ( items != ( has_callback ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     I32 len = av_len(array) + 1;
     for (I32 i = 0; i < len; i++) {
@@ -398,7 +457,9 @@ CODE:
 
     UNPACK_SIG(shvxs_array_INDEX_SIG);
     GET_ARRAY_FROM_SOURCE;
+
     GET_INDEX_FROM_SOURCE(1);
+    if ( items != ( has_ix ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     I32 len = av_len(array) + 1;
     I32 real_ix = ix;
@@ -427,7 +488,9 @@ CODE:
 
     UNPACK_SIG(shvxs_array_CALLBACK_SIG);
     GET_ARRAY_FROM_SOURCE;
+
     GET_CALLBACK_FROM_SOURCE(1);
+    if ( items != ( has_callback ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     out = newAV();
 
@@ -464,11 +527,13 @@ CODE:
 #### array : is_empty
 
 void
-shvxs_array_is_empty (SV *invocant)
+shvxs_array_is_empty (SV *invocant, ...)
 CODE:
 {
     dTHX;
     dSP;
+
+    if ( items > 1 ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     UNPACK_SIG(shvxs_array_SIMPLE_SIG);
     GET_ARRAY_FROM_SOURCE;
@@ -489,9 +554,15 @@ CODE:
 
     UNPACK_SIG(shvxs_array_SV_SIG);
     GET_ARRAY_FROM_SOURCE;
+
     MAYBE_GET_CURRIED_SV_FROM_SOURCE(1);
+    if ( items > ( has_curried_sv ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     SV* joiner = curried_sv ? curried_sv : sv_2mortal(newSVpv(",", 1));
+    if ( !joiner || !SvOK(joiner) || SvROK(joiner) || isGV(joiner) ) {
+        if ( has_curried_sv ) type_error(joiner, "$curried", 0, TYPE_BASE_STR, NULL);
+        type_error(joiner, "$_", 1, TYPE_BASE_STR, NULL);
+    }
 
     STRLEN sep_len;
     const char *sep = SvPV(joiner, sep_len);
@@ -526,7 +597,9 @@ CODE:
 
     UNPACK_SIG(shvxs_array_CALLBACK_SIG);
     GET_ARRAY_FROM_SOURCE;
+
     GET_CALLBACK_FROM_SOURCE(1);
+    if ( items != ( has_callback ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     out = newAV();
 
@@ -568,18 +641,24 @@ CODE:
 #### array : pop
 
 void
-shvxs_array_pop (SV *invocant)
+shvxs_array_pop (SV *invocant, ...)
 CODE:
 {
     dTHX;
     dSP;
 
+    if ( items > 1 ) croak(WRONG_NUMBER_OF_PARAMETERS);
+
     UNPACK_SIG(shvxs_array_SIMPLE_SIG);
     GET_ARRAY_FROM_SOURCE;
 
     val = (SV*)av_pop(array);
-    if (!val)
+    if (val) {
+        SvREFCNT_inc(val);
+    }
+    else {
         val = newSV(0);
+    }
 
     RETURN_ARRAY_EXPECTATION;
 }
@@ -599,7 +678,7 @@ CODE:
         val = ST(i);
         CHECK_TYPE(ok, val, sig->element_type, sig->element_type_cv);
         TRY_COERCE_TYPE(ok, val, sig->element_type, sig->element_type_cv, sig->element_coercion_cv);
-        if (!ok) croak("Invalid value for element %ld", (long)(i - 1));
+        if (!ok) type_error(val, "$_", i, sig->element_type, sig->element_type_tiny);
         av_push(array, newSVsv(val));
     }
 
@@ -609,11 +688,13 @@ CODE:
 #### array : reverse
 
 void
-shvxs_array_reverse (SV *invocant)
+shvxs_array_reverse (SV *invocant, ...)
 CODE:
 {
     dTHX;
     dSP;
+
+    if ( items > 1 ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     UNPACK_SIG(shvxs_array_SIMPLE_SIG);
     GET_ARRAY_FROM_SOURCE;
@@ -643,12 +724,12 @@ CODE:
     UNPACK_SIG(shvxs_array_SETTER_SIG);
     GET_ARRAY_FROM_SOURCE;
     GET_INDEX_FROM_SOURCE(1);
-
-    if (!( items > ( has_ix ? 1 : 2 ) || sig->has_curried_sv ) ) {
-        croak("Argument %d must be a scalar", 1 + ( has_ix ? 1 : 2 ));
-    }
-
     GET_CURRIED_SV_FROM_SOURCE(has_ix ? 1 : 2);
+
+    I32 expected = 3;
+    if (has_ix) expected--;
+    if (has_curried_sv) expected--;
+    if ( items != expected ) croak(WRONG_NUMBER_OF_PARAMETERS);
 
     I32 len = av_len(array) + 1;
     I32 real_ix = ix;
@@ -660,7 +741,20 @@ CODE:
     bool ok;
     CHECK_TYPE(ok, val, sig->element_type, sig->element_type_cv);
     TRY_COERCE_TYPE(ok, val, sig->element_type, sig->element_type_cv, sig->element_coercion_cv);
-    if (!ok) croak("Invalid value");
+    if (!ok) {
+        if ( has_ix && has_curried_sv ) {
+            type_error(val, "$curried", 1, sig->element_type, sig->element_type_tiny);
+        }
+        else if ( has_curried_sv ) {
+            type_error(val, "$curried", 0, sig->element_type, sig->element_type_tiny);
+        }
+        else if ( has_ix ) {
+            type_error(val, "$_", 1, sig->element_type, sig->element_type_tiny);
+        }
+        else {
+            type_error(val, "$_", 2, sig->element_type, sig->element_type_tiny);
+        }
+    }
 
     av_store(array, real_ix, val);
 
@@ -670,18 +764,24 @@ CODE:
 #### array : shift
 
 void
-shvxs_array_shift (SV *invocant)
+shvxs_array_shift (SV *invocant, ...)
 CODE:
 {
     dTHX;
     dSP;
 
+    if ( items > 1 ) croak(WRONG_NUMBER_OF_PARAMETERS);
+
     UNPACK_SIG(shvxs_array_SIMPLE_SIG);
     GET_ARRAY_FROM_SOURCE;
 
     val = (SV*)av_shift(array);
-    if (!val)
+    if (val) {
+        SvREFCNT_inc(val);
+    }
+    else {
         val = newSV(0);
+    }
 
     RETURN_ARRAY_EXPECTATION;
 }
@@ -697,7 +797,12 @@ CODE:
 
     UNPACK_SIG(shvxs_array_CALLBACK_SIG);
     GET_ARRAY_FROM_SOURCE;
+
     MAYBE_GET_CALLBACK_FROM_SOURCE(1);
+    if ( items > ( has_callback ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
+    if ( !has_callback && items == 2 && !callback && !IsCodeRef(ST(1)) ) {
+        type_error(ST(1), "$_", 1, TYPE_BASE_CODEREF, NULL);
+    }
 
     out = newAV();
 
@@ -753,7 +858,7 @@ CODE:
         val = ST(i);
         CHECK_TYPE(ok, val, sig->element_type, sig->element_type_cv);
         TRY_COERCE_TYPE(ok, val, sig->element_type, sig->element_type_cv, sig->element_coercion_cv);
-        if (!ok) croak("Invalid value for element %ld", (long)(i - 1));
+        if (!ok) type_error(val, "$_", i, sig->element_type, sig->element_type_tiny);
         av_unshift(array, 1);
         av_store(array, 0, newSVsv(val));
     }
@@ -950,11 +1055,11 @@ CODE:
     switch ( ix ) {
         case 1:
             op = XS_Sub__HandlesVia__XS_shvxs_array_push;
-            rp = SHOULD_RETURN_NOTHING;
+            rp = SHOULD_RETURN_COUNT;
             break;
         case 2:
             op = XS_Sub__HandlesVia__XS_shvxs_array_unshift;
-            rp = SHOULD_RETURN_NOTHING;
+            rp = SHOULD_RETURN_COUNT;
             break;
         default:
             croak("PANIC!");
@@ -969,6 +1074,7 @@ CODE:
     UNPACKING_GET_I32    (hv, sig, arr_source_index,      0);
     UNPACKING_GET_I32    (hv, sig, element_type,          TYPE_BASE_ANY);
     UNPACKING_GET_CV     (hv, sig, element_type_cv);
+    UNPACKING_MAYBE_SV   (hv, sig, element_type_tiny,     has_element_type_tiny);
     UNPACKING_GET_CV     (hv, sig, element_coercion_cv);
     UNPACKING_GET_ENUM   (hv, sig, method_return_pattern, rp, ReturnPattern);
     UNPACKING_GET_STRING (hv, sig, method_return_class,       NULL);
@@ -1071,6 +1177,7 @@ CODE:
     UNPACKING_MAYBE_SV   (hv, sig, curried_sv, has_curried_sv);
     UNPACKING_GET_I32    (hv, sig, element_type,          TYPE_BASE_ANY);
     UNPACKING_GET_CV     (hv, sig, element_type_cv);
+    UNPACKING_MAYBE_SV   (hv, sig, element_type_tiny,     has_element_type_tiny);
     UNPACKING_GET_CV     (hv, sig, element_coercion_cv);
     UNPACKING_GET_ENUM   (hv, sig, method_return_pattern, rp, ReturnPattern);
     UNPACKING_GET_STRING (hv, sig, method_return_class,       NULL);

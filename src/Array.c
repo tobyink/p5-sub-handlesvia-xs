@@ -27,6 +27,8 @@ typedef struct {
     I32                 arr_source_index;
     I32                 element_type;
     CV*                 element_type_cv;
+    SV*                 element_type_tiny;
+    bool                has_element_type_tiny;
     CV*                 element_coercion_cv;
     enum ReturnPattern  method_return_pattern;
     char*               method_return_class;
@@ -87,6 +89,8 @@ typedef struct {
     SV*                 curried_sv;
     I32                 element_type;
     CV*                 element_type_cv;
+    SV*                 element_type_tiny;
+    bool                has_element_type_tiny;
     CV*                 element_coercion_cv;
     enum ReturnPattern  method_return_pattern;
     char*               method_return_class;
@@ -190,11 +194,13 @@ typedef struct {
             ix = sig->index;                                            \
         }                                                               \
         else if (items > z) {                                           \
+            bool ok = check_type(ST(z), TYPE_BASE_INT, NULL);           \
+            if (!ok) type_error(ST(z), "$_", z, TYPE_BASE_INT, NULL);   \
             has_ix = FALSE;                                             \
             ix = SvIV(ST(z));                                           \
         }                                                               \
         else {                                                          \
-            croak("Argument %d must be an index", z + 1);               \
+            croak(WRONG_NUMBER_OF_PARAMETERS);                          \
         }                                                               \
     } STMT_END
 
@@ -211,7 +217,7 @@ typedef struct {
             curried_sv = newSVsv(ST(z));                                \
         }                                                               \
         else {                                                          \
-            croak("Argument %d must be a scalar", z + 1);               \
+            croak(WRONG_NUMBER_OF_PARAMETERS);                          \
         }                                                               \
     } STMT_END
 
@@ -231,35 +237,40 @@ typedef struct {
 
 #define GET_CALLBACK_FROM_SOURCE(z)                                     \
     CV *callback = NULL;                                                \
+    bool has_callback = FALSE;                                          \
     STMT_START {                                                        \
         if (sig->callback) {                                            \
             if (items > 1 && SvOK(ST(1))) {                             \
                 if (SvROK(ST(1)) && SvTYPE(SvRV(ST(1))) == SVt_PVCV) {  \
-                    croak("Callback must not be passed explicitly");    \
+                    croak(WRONG_NUMBER_OF_PARAMETERS);                  \
                 }                                                       \
             }                                                           \
             callback = sig->callback;                                   \
+            has_callback = TRUE;                                        \
+        }                                                               \
+        else if (items <= z ) {                                         \
+            croak(WRONG_NUMBER_OF_PARAMETERS);                          \
+        }                                                               \
+        else if ( !SvROK(ST(z)) || SvTYPE(SvRV(ST(z))) != SVt_PVCV ) {  \
+            type_error(ST(z), "$_", z, TYPE_BASE_CODEREF, NULL);        \
         }                                                               \
         else {                                                          \
-            if (items <= z                                              \
-                || !SvROK(ST(z))                                        \
-                || SvTYPE(SvRV(ST(z))) != SVt_PVCV) {                   \
-                croak("Argument %d must be a coderef", z + 1);          \
-            }                                                           \
             callback = (CV *)SvRV(ST(z));                               \
         }                                                               \
     } STMT_END
 
 #define MAYBE_GET_CALLBACK_FROM_SOURCE(z)                               \
     CV *callback = NULL;                                                \
+    bool has_callback = FALSE;                                          \
     STMT_START {                                                        \
         if (sig->callback) {                                            \
             if (items > z && SvOK(ST(z))) {                             \
                 if (SvROK(ST(z)) && SvTYPE(SvRV(ST(z))) == SVt_PVCV) {  \
-                    croak("Callback must not be passed explicitly");    \
+                    croak(WRONG_NUMBER_OF_PARAMETERS);                  \
                 }                                                       \
             }                                                           \
             callback = sig->callback;                                   \
+            has_callback = TRUE;                                        \
         }                                                               \
         else {                                                          \
             if (items <= z                                              \

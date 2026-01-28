@@ -10,6 +10,7 @@ enum ReturnPattern {
     SHOULD_RETURN_OUT,
     SHOULD_RETURN_OUTBLESS,
     SHOULD_RETURN_VAL,
+    SHOULD_RETURN_COUNT,
 };
 
 #define RETURN_ARRAY_EXPECTATION                                        \
@@ -37,6 +38,11 @@ enum ReturnPattern {
                                                                         \
         case SHOULD_RETURN_VAL:                                         \
             ST(0) = val;                                                \
+            XSRETURN(1);                                                \
+                                                                        \
+        case SHOULD_RETURN_COUNT:                                       \
+            I32 n = av_len(array) + 1;                                  \
+            ST(0) = sv_2mortal(newSViv(n));                             \
             XSRETURN(1);                                                \
                                                                         \
         case SHOULD_RETURN_ARRAY:                                       \

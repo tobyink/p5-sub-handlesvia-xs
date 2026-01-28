@@ -16,15 +16,15 @@ subtest "Basic" => sub {
 	} );
 
 	my $arr = [ 999 ];
-	is( Local::test_1( $arr, 1 ), undef );
+	is( Local::test_1( $arr, 1 ), 2 );
 	is( $arr, [ 999, 1 ] );
-	is( Local::test_1( $arr, undef ), undef );
+	is( Local::test_1( $arr, undef ), 3 );
 	is( $arr, [ 999, 1, undef ] );
-	is( Local::test_1( $arr, 2, 3, 4 ), undef );
+	is( Local::test_1( $arr, 2, 3, 4 ), 6 );
 	is( $arr, [ 999, 1, undef, 2, 3, 4 ] );
-	is( Local::test_1( $arr ), undef );
+	is( Local::test_1( $arr ), 6 );
 	is( $arr, [ 999, 1, undef, 2, 3, 4 ] );
-	is( Local::test_1( $arr, 5 ), undef );
+	is( Local::test_1( $arr, 5 ), 7 );
 	is( $arr, [ 999, 1, undef, 2, 3, 4, 5 ] );
 };
 
@@ -53,9 +53,10 @@ subtest "Typed" => sub {
 	is($flags, Sub::HandlesVia::XS::TYPE_BASE_INT);
 	
 	Sub::HandlesVia::XS::INSTALL_shvxs_array_push( "Local::test_3" => {
-		arr_source       => Sub::HandlesVia::XS::ARRAY_SRC_INVOCANT,
-		element_type     => $flags,
-		element_type_cv  => $coderef,
+		arr_source             => Sub::HandlesVia::XS::ARRAY_SRC_INVOCANT,
+		element_type           => $flags,
+		element_type_cv        => $coderef,
+		method_return_pattern  => Sub::HandlesVia::XS::SHOULD_RETURN_UNDEF,
 	} );
 
 	my $arr = [ 999 ];
@@ -64,7 +65,7 @@ subtest "Typed" => sub {
 	my $e = dies {
 		Local::test_3( $arr, undef );
 	};
-	like $e, qr/^Invalid value/;
+	like $e, qr/^Undef did not pass type constraint "Int" \(in ._.1.\)/;
 	is( $arr, [ 999, 1 ] );
 	is( Local::test_3( $arr, 2, 3, 4 ), undef );
 	is( $arr, [ 999, 1, 2, 3, 4 ] );
@@ -91,9 +92,9 @@ subtest "Typed with coercion" => sub {
 	is( Local::test_4( $arr, 1.1 ), 1 );
 	is( $arr, [ 999, 1 ] );
 	my $e = dies {
-		Local::test_4( $arr, undef );
+		Local::test_4( $arr, [] );
 	};
-	like $e, qr/^Invalid value/;
+	like $e, qr/^Reference \[\] did not pass type constraint "Int" \(in ._.1.\)/;
 	is( $arr, [ 999, 1 ] );
 	is( Local::test_4( $arr, 2.1, 3.1, 4.1 ), 4 );
 	is( $arr, [ 999, 1, 2, 3, 4 ] );

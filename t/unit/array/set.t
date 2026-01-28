@@ -22,7 +22,7 @@ my $BASIC_TESTS = sub {
 	my $e = dies {
 		$f->($arr);
 	};
-	like $e, qr/^Argument 2 must be an index/;
+	like $e, qr/^Wrong number of parameters/;
 
 	$f->($arr,  0, 66);
 	$f->($arr, -1, 99);
@@ -47,7 +47,7 @@ subtest 'Set operating directly on array, no curried arguments' => sub {
 	my $e = dies {
 		Local::test_1( $arr, 1 );
 	};
-	like( $e, qr/^Argument 3 must be a scalar/, 'Denied implicit set undef' );
+	like( $e, qr/^Wrong number of parameters/, 'Denied implicit set undef' );
 	is( $arr, [ 10, 11, undef, 13, 14 ], '... and unaltered array' );
 };
 
@@ -92,7 +92,7 @@ subtest 'Set operating directly on array, no curried arguments, type check, no c
 	my $e = dies {
 		Local::test_4($arr, 0, 31.1);
 	};
-	like $e, qr/^Invalid value/, 'Type fail';
+	like $e, qr/^Value "31.1" did not pass type constraint "Int" \(in ._.2.\)/, 'Type fail';
 };
 
 subtest 'Set operating directly on array, no curried arguments, type check and coercion' => sub {
@@ -117,7 +117,7 @@ subtest 'Set operating directly on array, no curried arguments, type check and c
 	my $e = dies {
 		Local::test_4($arr, 0, 'Hello world');
 	};
-	like $e, qr/^Invalid value/, 'Type fail';
+	like $e, qr/^Value "Hello world" did not pass type constraint "Int" \(in ._.2.\)/, 'Type fail';
 };
 
 subtest 'Set operating on array in an array, no curried arguments' => sub {
