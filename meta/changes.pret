@@ -31,3 +31,9 @@
 	changeset [
 		item "Improvements to the OUTBLESS return pattern."^^Change;
 	].
+
+`Sub-HandlesVia-XS 0.001004 cpan:TOBYINK`
+	issued  2026-01-29;
+	changeset [
+		item "Fix packaging error."^^Change;
+	].
