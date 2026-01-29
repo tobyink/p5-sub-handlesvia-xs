@@ -286,6 +286,7 @@ typedef struct {
 
 SV*
 shvxs_return_sv_object(
+    SV*               invocant,
     AV*               array,
     char*             return_class,
     char*             return_constructor,
@@ -298,6 +299,20 @@ shvxs_return_sv_object(
     SV *array_ref = newRV_noinc((SV *)array);
     SV *obj;
 
+    SV *return_class_sv    = NULL;
+    HV *return_class_stash = NULL;
+
+    if (return_class && strcmp(return_class, "1") == 0) {
+        if (!SvROK(invocant) || !SvOBJECT(SvRV(invocant)))
+            croak("Invocant is not an object");
+        return_class_stash = SvSTASH(SvRV(invocant));
+        return_class_sv = newSVpv(HvNAME(return_class_stash), 0);
+    }
+    else if (return_class) {
+        return_class_sv = newSVpv(return_class, 0);
+        return_class_stash = gv_stashpv(return_class, GV_ADD);
+    }
+
     /* Case 1: call constructor */
     if (return_constructor) {
         dSP;
@@ -306,7 +321,7 @@ shvxs_return_sv_object(
         SAVETMPS;
 
         PUSHMARK(SP);
-        XPUSHs(sv_2mortal(newSVpv(return_class, 0)));
+        XPUSHs(sv_2mortal(return_class_sv));
         XPUSHs(array_ref);
         PUTBACK;
 
@@ -324,7 +339,7 @@ shvxs_return_sv_object(
 
     /* Case 2: bless(\@array, class) */
     if (arr_source == ARRAY_SRC_INVOCANT) {
-        obj = sv_bless(array_ref, gv_stashpv(return_class, GV_ADD));
+        obj = sv_bless(array_ref, return_class_stash);
         return SvREFCNT_inc(obj);
     }
 
@@ -334,7 +349,7 @@ shvxs_return_sv_object(
         sv_setsv(tmp, array_ref);
 
         SV *tmp_ref = newRV_noinc(tmp);
-        obj = sv_bless(tmp_ref, gv_stashpv(return_class, GV_ADD));
+        obj = sv_bless(tmp_ref, return_class_stash);
 
         return SvREFCNT_inc(obj);
     }
@@ -345,7 +360,7 @@ shvxs_return_sv_object(
         av_store(tmp, arr_source_index, SvREFCNT_inc(array_ref));
 
         SV *tmp_ref = newRV_noinc((SV *)tmp);
-        obj = sv_bless(tmp_ref, gv_stashpv(return_class, GV_ADD));
+        obj = sv_bless(tmp_ref, return_class_stash);
 
         return SvREFCNT_inc(obj);
     }
@@ -362,7 +377,7 @@ shvxs_return_sv_object(
         );
 
         SV *tmp_ref = newRV_noinc((SV *)tmp);
-        obj = sv_bless(tmp_ref, gv_stashpv(return_class, GV_ADD));
+        obj = sv_bless(tmp_ref, return_class_stash);
 
         return SvREFCNT_inc(obj);
     }

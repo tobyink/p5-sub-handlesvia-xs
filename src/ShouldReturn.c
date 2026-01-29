@@ -58,6 +58,7 @@ enum ReturnPattern {
                 }                                                       \
                 else {                                                  \
                     ST(0) = shvxs_return_sv_object(                     \
+                        invocant,                                       \
                         array,                                          \
                         sig->method_return_class,                       \
                         sig->method_return_constructor,                 \
@@ -95,6 +96,7 @@ enum ReturnPattern {
                 }                                                       \
                 else {                                                  \
                     ST(0) = shvxs_return_sv_object(                     \
+                        invocant,                                       \
                         out,                                            \
                         sig->method_return_class,                       \
                         sig->method_return_constructor,                 \

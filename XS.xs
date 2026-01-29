@@ -516,12 +516,13 @@ CODE:
         XPUSHs(sv_2mortal(newSViv(i)));
         PUTBACK;
 
-        call_sv((SV *)callback, G_SCALAR);
+        I32 count = call_sv((SV *)callback, G_SCALAR);
+
         SPAGAIN;
 
         SV *ret = POPs;
-        if (SvTRUE(ret))
-            av_push(out, newSVsv(*svp));
+        if (count > 0 && SvTRUE(ret))
+            av_push(out, SV_SAFE_COPY(*svp));
 
         PUTBACK;
         FREETMPS;
@@ -632,7 +633,7 @@ CODE:
         if (count > 0) {
             SV **results = SP - count + 1;
             for (I32 j = 0; j < count; j++) {
-                av_push(out, newSVsv(results[j]));
+                av_push(out, SV_SAFE_COPY(results[j]));
             }
             SP -= count;
         }

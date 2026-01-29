@@ -25,3 +25,9 @@
 	changeset [
 		item "Fix for hard to trigger refcount issues with unshift and push methods."^^Bugfix;
 	].
+
+`Sub-HandlesVia-XS 0.001003 cpan:TOBYINK`
+	issued  2026-01-29;
+	changeset [
+		item "Improvements to the OUTBLESS return pattern."^^Change;
+	].
