@@ -35,5 +35,14 @@
 `Sub-HandlesVia-XS 0.001004 cpan:TOBYINK`
 	issued  2026-01-29;
 	changeset [
-		item "Fix packaging error."^^Change;
+		item "Fix packaging error."^^Packaging;
+	].
+
+`Sub-HandlesVia-XS 0.002000 cpan:TOBYINK`
+	issued  2026-01-29;
+	changeset [
+		item "Fix XS errors initializing mortal SVs before SAVETMPS which was leading to crashes on large arrays."^^Bugfix;
+		item "Fix qsort implementation on non-glibc platforms."^^Bugfix;
+		item "Efficiency and stability improvements for some of the array-looping methods."^^Change;
+		item "A whole bunch of string methods."^^Addition;
 	].
