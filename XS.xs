@@ -425,6 +425,49 @@ CODE:
     RETURN_ARRAY_EXPECTATION;
 }
 
+#### array : for_each2
+
+void
+shvxs_array_for_each2 (SV *invocant, ...)
+CODE:
+{
+    dTHX;
+    dSP;
+
+    UNPACK_SIG(shvxs_array_CALLBACK_SIG);
+    GET_ARRAY_FROM_SOURCE;
+
+    GET_CALLBACK_FROM_SOURCE(1);
+    if ( items != ( has_callback ? 1 : 2 ) ) croak(WRONG_NUMBER_OF_PARAMETERS);
+
+    SV *sv_dollar_underscore = get_sv("_", 0);
+    I32 len = av_len(array) + 1;
+
+    ENTER;
+    SAVETMPS;
+
+    for (I32 i = 0; i < len; i++) {
+        SV **svp = av_fetch(array, i, 0);
+        if (!svp) continue;
+        SV *elem = *svp;
+        sv_setsv(sv_dollar_underscore, elem);
+
+        PUSHMARK(SP);
+        PUTBACK;
+
+        call_sv((SV*)callback, G_VOID | G_DISCARD);
+        SPAGAIN;
+
+        FREETMPS;
+        SAVETMPS;
+    }
+
+    FREETMPS;
+    LEAVE;
+
+    RETURN_ARRAY_EXPECTATION;
+}
+
 #### array : get
 
 void
@@ -928,6 +971,7 @@ ALIAS:
     INSTALL_shvxs_array_any          = 5
     INSTALL_shvxs_array_all_true     = 6
     INSTALL_shvxs_array_sort         = 7
+    INSTALL_shvxs_array_for_each2    = 8
 CODE:
 {
     dTHX;
@@ -962,6 +1006,10 @@ CODE:
         case 7:
             op = XS_Sub__HandlesVia__XS_shvxs_array_sort;
             rp = SHOULD_RETURN_OUT;
+            break;
+       case 8:
+            op = XS_Sub__HandlesVia__XS_shvxs_array_for_each2;
+            rp = SHOULD_RETURN_INVOCANT;
             break;
         default:
             croak("PANIC!");
