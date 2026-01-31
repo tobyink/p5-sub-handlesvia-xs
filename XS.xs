@@ -184,7 +184,6 @@ CODE:
     val = &PL_sv_yes;
 
     SV *sv_dollar_underscore = get_sv("_", 0);
-    SV *ixsv = sv_2mortal(newSViv(0));
     I32 len = av_len(array) + 1;
     
     ENTER;
@@ -195,11 +194,8 @@ CODE:
         if (!svp) continue;
         SV *elem = *svp;
         sv_setsv(sv_dollar_underscore, elem);
-        sv_setiv(ixsv, i);
 
         PUSHMARK(SP);
-        XPUSHs(elem);
-        XPUSHs(ixsv);
         PUTBACK;
 
         I32 count = call_sv((SV *)callback, G_SCALAR);
@@ -246,7 +242,6 @@ CODE:
     val = &PL_sv_no;
 
     SV *sv_dollar_underscore = get_sv("_", 0);
-    SV *ixsv = sv_2mortal(newSViv(0));
     I32 len = av_len(array) + 1;
 
     ENTER;
@@ -257,11 +252,8 @@ CODE:
         if (!svp) continue;
         SV *elem = *svp;
         sv_setsv(sv_dollar_underscore, elem);
-        sv_setiv(ixsv, i);
 
         PUSHMARK(SP);
-        XPUSHs(elem);
-        XPUSHs(ixsv);
         PUTBACK;
 
         I32 count = call_sv((SV *)callback, G_SCALAR);
@@ -346,7 +338,6 @@ CODE:
     val = &PL_sv_undef;
 
     SV *sv_dollar_underscore = get_sv("_", 0);
-    SV *ixsv = sv_2mortal(newSViv(0));
     I32 len = av_len(array) + 1;
 
     ENTER;
@@ -357,11 +348,8 @@ CODE:
         if (!svp) continue;
         SV *elem = *svp;
         sv_setsv(sv_dollar_underscore, elem);
-        sv_setiv(ixsv, i);
 
         PUSHMARK(SP);
-        XPUSHs(elem);
-        XPUSHs(ixsv);
         PUTBACK;
 
         I32 count = call_sv((SV *)callback, G_SCALAR);
@@ -486,7 +474,6 @@ CODE:
     out = newAV();
 
     SV *sv_dollar_underscore = get_sv("_", 0);
-    SV *ixsv = sv_2mortal(newSViv(0));
     I32 len = av_len(array) + 1;
 
     ENTER;
@@ -497,11 +484,8 @@ CODE:
         if (!svp) continue;
         SV *elem = *svp;
         sv_setsv(sv_dollar_underscore, elem);
-        sv_setiv(ixsv, i);
 
         PUSHMARK(SP);
-        XPUSHs(elem);
-        XPUSHs(ixsv);
         PUTBACK;
 
         I32 count = call_sv((SV *)callback, G_SCALAR);
@@ -602,7 +586,6 @@ CODE:
     out = newAV();
 
     SV *sv_dollar_underscore = get_sv("_", 0);
-    SV *ixsv = sv_2mortal(newSViv(0));
     I32 len = av_len(array) + 1;
 
     ENTER;
@@ -613,11 +596,8 @@ CODE:
         if (!svp) continue;
         SV *elem = *svp;
         sv_setsv(sv_dollar_underscore, elem);
-        sv_setiv(ixsv, i);
 
         PUSHMARK(SP);
-        XPUSHs(elem);
-        XPUSHs(ixsv);
         PUTBACK;
 
         I32 count = call_sv((SV *)callback, G_ARRAY);
