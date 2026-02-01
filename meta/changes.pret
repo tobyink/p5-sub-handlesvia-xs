@@ -46,3 +46,10 @@
 		item "Efficiency and stability improvements for some of the array-looping methods."^^Change;
 		item "A whole bunch of string methods."^^Addition;
 	].
+
+`Sub-HandlesVia-XS 0.003000 cpan:TOBYINK`
+	issued  2026-02-01;
+	changeset [
+		item "Use MULTICALL for most of the methods which run a callback on each array element."^^Change;
+		item "Two new array methods: none and not_all_true."^^Addition;
+	].
