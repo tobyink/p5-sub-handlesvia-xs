@@ -53,3 +53,13 @@
 		item "Use MULTICALL for most of the methods which run a callback on each array element."^^Change;
 		item "Two new array methods: none and not_all_true."^^Addition;
 	].
+
+`Sub-HandlesVia-XS 0.003001 cpan:TOBYINK`
+	issued  2026-02-03;
+	changeset [
+		item "Fix issues with CvISXSUB not being defined on Perl older than 5.8.9."^^Bugfix;
+		item "Fix segfaults sorting on Perl older than around 5.20.0."^^Bugfix;
+		item "Fixes for sorting on non-glibc platforms."^^Bugfix;
+		item "Gracefully handle exceptions thrown in a sorting callback."^^Change;
+		item "Allow module to be built with MULTICALL disabled (perl Makefile.PL CCFLAGS='-DDO_MULTICALL=0') mostly for testing."^^Change;
+	].
