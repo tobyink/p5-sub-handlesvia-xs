@@ -111,7 +111,7 @@ check_type(SV* const val, int flags, CV* check_cv)
             warn( "Type constraint check coderef gone AWOL so just assuming value passes" );
             return 1;
         }
-        
+
         SV* result;
 
         dSP;
@@ -482,14 +482,12 @@ type_name(I32 type_flags)
     }
 
     if (is_array) {
-        snprintf(buf, sizeof(buf),
-                 "ArrayRef[%s]", base_name);
+        snprintf(buf, sizeof(buf), "ArrayRef[%s]", base_name);
         return buf;
     }
 
     if (is_hash) {
-        snprintf(buf, sizeof(buf),
-                 "HashRef[%s]", base_name);
+        snprintf(buf, sizeof(buf), "HashRef[%s]", base_name);
         return buf;
     }
 
