@@ -977,7 +977,10 @@ CODE:
 #ifdef USE_ITHREADS
         ctx.aTHX = aTHX;
 #endif
-        ctx.callback = callback;
+        ctx.callback = NULL;
+        ctx.err = NULL;
+        if ( callback )
+            ctx.callback = callback;
 
         SHVXS_QSORT(elems, len, sizeof(SV *), &ctx);
 
@@ -988,6 +991,12 @@ CODE:
         }
 
         free(elems);
+
+        if (ctx.err) {
+            SV *e = ctx.err;
+            ctx.err = NULL;
+            croak_sv(e);
+        }
     }
 
     RETURN_ARRAY_EXPECTATION;
