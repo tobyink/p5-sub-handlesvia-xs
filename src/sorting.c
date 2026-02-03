@@ -1,6 +1,6 @@
 typedef struct {
 #ifdef USE_ITHREADS
-    pTHX;
+    PerlInterpreter *my_perl;
 #endif
     CV *callback; // can be NULL
     SV *err;
@@ -11,7 +11,7 @@ shvxs_sort_cmp(const void *a, const void *b, void *ctx)
 {
     sort_ctx_t *c = (sort_ctx_t *)ctx;
 #ifdef USE_ITHREADS
-    dTHXa(c->aTHX);
+    dTHXa(c->my_perl);
 #endif
 
     if (c->err) return 0;

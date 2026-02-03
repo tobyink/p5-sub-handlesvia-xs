@@ -2,7 +2,14 @@
 #include "xshelper.h"
 #include "multicall.h"
 
+/* When testing, also test this with DO_MULTICALL set to 0 */
+#ifndef DO_MULTICALL
 #define DO_MULTICALL 1
+#endif
+
+#ifndef CvISXSUB
+#define CvISXSUB(cv) (CvXSUB(cv) != NULL)
+#endif
 
 #define IsObject(sv)    (SvROK(sv) && SvOBJECT(SvRV(sv)))
 #define IsArrayRef(sv)  (SvROK(sv) && !SvOBJECT(SvRV(sv)) && SvTYPE(SvRV(sv)) == SVt_PVAV)
@@ -975,7 +982,7 @@ CODE:
 
         sort_ctx_t ctx;
 #ifdef USE_ITHREADS
-        ctx.aTHX = aTHX;
+        ctx.my_perl = my_perl;
 #endif
         ctx.callback = NULL;
         ctx.err = NULL;
