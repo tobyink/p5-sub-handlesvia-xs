@@ -137,7 +137,19 @@ jobs:
         if: matrix.coverage
         working-directory: ./build/
         run: cover -delete
-      - name: Test suite
+      - name: Test Suite
+        working-directory: ./build/
+        run: gha-prove -b -r t
+      - name: Clean
+        working-directory: ./build/
+        run: make clean
+      - name: Configure (DO_MULTICALL=0)
+        working-directory: ./build/
+        run: perl Makefile.PL CCFLAGS='-DDO_MULTICALL=0'
+      - name: Make (DO_MULTICALL=0)
+        working-directory: ./build/
+        run: make clean
+      - name: Test Suite (DO_MULTICALL=0)
         working-directory: ./build/
         run: gha-prove -b -r t
       - name: Coveralls.io report
