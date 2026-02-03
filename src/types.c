@@ -106,7 +106,7 @@ check_type(SV* const val, int flags, CV* check_cv)
     dTHX;
     assert(val);
 
-    if ( flags & TYPE_OTHER == TYPE_OTHER ) {
+    if ( ( flags & TYPE_OTHER ) == TYPE_OTHER ) {
         if ( !check_cv ) {
             warn( "Type constraint check coderef gone AWOL so just assuming value passes" );
             return 1;
