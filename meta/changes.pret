@@ -69,3 +69,10 @@
 	changeset [
 		item "Make all the C code C89-compliant."^^Bugfix;
 	].
+
+`Sub-HandlesVia-XS 0.003003 cpan:TOBYINK`
+	issued  2026-02-04;
+	changeset [
+		item "Avoid redefining the newAV_mortal macro."^^Bugfix;
+		item "Remove superfluous files from packaging."^^Packaging;
+	].
