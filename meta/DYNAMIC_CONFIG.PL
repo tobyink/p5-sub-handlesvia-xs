@@ -24,3 +24,18 @@
 			copy($fallback, $file) or die "Can't copy $fallback to $file: $!";
 		}
 	}
+
+	my $STRICT;
+	$STRICT++ if ( $ENV{GITHUB_REPOSITORY} and $ENV{GITHUB_REPOSITORY} =~ /p5-sub-handlesvia/ );
+	$STRICT++ if ( $ENV{EXTENDED_TESTING}  and $ENV{USER} and $ENV{USER} eq 'tai' );
+	$STRICT++ if ( $ENV{PERL_XS_STRICTC89} );
+	if ( $STRICT ) {
+		require Config;
+		my $SPACE = q{ };
+		$dynamic_config{CCFLAGS} = join $SPACE => (
+			$Config::Config{ccflags},
+			'-std=c89',
+			'-Wall',
+			'-Werror',
+		);
+	}
