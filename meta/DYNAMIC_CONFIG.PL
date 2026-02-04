@@ -35,7 +35,6 @@
 		$dynamic_config{CCFLAGS} = join $SPACE => (
 			$Config::Config{ccflags},
 			'-std=c89',
-			'-Wpedantic',
 			'-Werror',
 		);
 	}
