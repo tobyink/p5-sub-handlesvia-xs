@@ -76,3 +76,10 @@
 		item "Avoid redefining the newAV_mortal macro."^^Bugfix;
 		item "Remove superfluous files from packaging."^^Packaging;
 	].
+
+`Sub-HandlesVia-XS 0.003004 cpan:TOBYINK`
+	issued  2026-02-04;
+	changeset [
+		item "More C89 fixes."^^Bugfix;
+		item "Fix for_each2 on older Perls, before around 5.22."^^Bugfix;
+	].
