@@ -474,7 +474,9 @@ CODE:
             SV *elem = svp ? *svp : &PL_sv_undef;
             sv_setsv(sv_dollar_underscore, elem);
             PUSHMARK(SP);
+            PUTBACK;
             call_sv((SV*)callback, G_VOID);
+            SPAGAIN;
         }
     }
 
